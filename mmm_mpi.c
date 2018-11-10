@@ -69,7 +69,7 @@ void displayResult(double time, int N, double *A, double *B, double *C) {
 
 
 int main(int argc, char **argv) {
-    int n, numtasks, taskid, tasksz;
+    int n, numtasks, taskid, tasksz, tid;
     struct timespec t1, t2;
     double time_pass, time_sec, time_nsec;
     checkArgc(argc);
@@ -104,15 +104,15 @@ int main(int argc, char **argv) {
         
         clock_gettime(CLOCK_MONOTONIC, &t2);
     }else {
-        MPI_Recv(&B, allsz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD);
-        MPI_Recv(&A[taskid * tasksz], tasksz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD);
+        MPI_Recv(&B, allsz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD, &status);
+        MPI_Recv(&A[taskid * tasksz], tasksz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD, &status);
         matrixMultiplicationIKJ(n,A,B,&C,taskid,numtasks);
         MPI_Send(&C, tasksz, MPI_DOUBLE, taskid, 1, MPI_COMM_WORLD);
     }
     
     //signals
     //MPI reduce??
-    MPI_finalize();
+    MPI_Finalize();
     
     time_sec = (double)(t2.tv_sec - t1.tv_sec);
     time_nsec = (double)(t2.tv_nsec - t1.tv_nsec);
