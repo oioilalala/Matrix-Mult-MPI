@@ -65,25 +65,50 @@ void displayResult(double time, int N, double *A, double *B, double *C) {
     printf("C: %u\n", matrix_checksum(N, C));
 }
 
-//void srandom (unsigned seed);
 
 int main(int argc, char **argv) {
-    int n,numtasks,taskid;
+    int n,numtasks,taskid,tasksz;
     struct timespec t1, t2;
     double time_pass, time_sec, time_nsec;
     checkArgc(argc);
     readArgv(argv, &n);
-    double *A = malloc(n * n * sizeof(double));
-    double *B = malloc(n * n * sizeof(double));
-    double *C = malloc(n * n * sizeof(double));
-    initMatrix(n, &A, &B);
+    
+    MPI_Status status;
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
   
     clock_gettime(CLOCK_MONOTONIC, &t1);
-   
-    matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
+    
+    tasksz = n * n / numtasks;
+    if (taskid == MASTER) {
+        double *A = malloc(n * n * sizeof(double));
+        double *B = malloc(n * n * sizeof(double));
+        double *C = malloc(n * n * sizeof(double));
+        initMatrix(n, &A, &B);
+        
+        for (int i = 1; i < numtasks; i++) {
+    //        matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
+            MPI_Send(&tasksz, 1, MPI_INT, taskid, 0, MPI_COMM_WORLD);
+            MPI_Send(&A, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD);
+            MPI_Send(&B, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD);
+        }
+        
+        matrixMultiplicationIKJ(n, MASTER, numtasks, A, B, &C);
+        
+        for (int i = 1; i <= numtasks; i++) {
+            MPI_Recv(&partC, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
+            C += partC;
+        }
+    } else {
+        double *partC = malloc(tasksz * sizeof(double));
+        MPI_Recv(&tasksz, 1, MPI_INT, MASTER, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(&A, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(&B, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD, &status);
+        matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &partC);
+        MPI_Send(&partC, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD);
+    }
+    
     //signals
     //MPI reduce??
     clock_gettime(CLOCK_MONOTONIC, &t2);
