@@ -99,6 +99,7 @@ int main(int argc, char **argv) {
         for (int i = 1; i <= numtasks; i++) {
             MPI_Recv(&C, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
         }
+        clock_gettime(CLOCK_MONOTONIC, &t2);
     } else {
         MPI_Recv(&tasksz, 1, MPI_INT, MASTER, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(&A, tasksz, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD, &status);
@@ -106,10 +107,9 @@ int main(int argc, char **argv) {
         matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
         MPI_Send(&C, tasksz, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD);
     }
-    
+    MPI_Finalize();
     //signals
     //MPI reduce??
-    clock_gettime(CLOCK_MONOTONIC, &t2);
     
     time_sec = (double)(t2.tv_sec - t1.tv_sec);
     time_nsec = (double)(t2.tv_nsec - t1.tv_nsec);
@@ -119,6 +119,5 @@ int main(int argc, char **argv) {
     free(A);
     free(B);
     free(C);
-    MPI_Finalize();
     return 0;
 }
