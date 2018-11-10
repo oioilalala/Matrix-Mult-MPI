@@ -110,10 +110,9 @@ int main(int argc, char **argv) {
 
 
     clock_gettime(CLOCK_MONOTONIC, &t1);
-    for (int i=0; i<num_tasks; i++) {
-        taskid=i;
-        matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
-    }
+   
+    matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
+    
     clock_gettime(CLOCK_MONOTONIC, &t2);
     
     time_sec = (double)(t2.tv_sec - t1.tv_sec);
