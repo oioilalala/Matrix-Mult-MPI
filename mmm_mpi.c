@@ -68,8 +68,7 @@ void displayResult(double time, int N, double *A, double *B, double *C) {
 //void srandom (unsigned seed);
 
 int main(int argc, char **argv) {
-    int n,numtasks,taskid,retc;
- //   double *homec;
+    int n,numtasks,taskid;
     struct timespec t1, t2;
     double time_pass, time_sec, time_nsec;
     checkArgc(argc);
@@ -78,37 +77,10 @@ int main(int argc, char **argv) {
     double *B = malloc(n * n * sizeof(double));
     double *C = malloc(n * n * sizeof(double));
     initMatrix(n, &A, &B);
-
-//   MPI_Status status;
-
-    /* Obtain number of tasks and task ID */
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
-    //printf ("MPI task %d has started...\n", taskid);
-
-    /* Set seed for random number generator equal to task ID */
-  //  srandom (taskid);
-    
-   // if (taskid == MASTER) 
-  //  for (int i = 0; i < n; i++) {
-  //     matrixMultiplicationIKJ(n,A,B,&C);
-    
-    //   retc = MPI_Reduce(&homec, &C, 1, MPI_DOUBLE, MPI_SUM,
-    //                   MASTER, MPI_COMM_WORLD);
-       
-       /* Master computes average for this iteration and all iterations */
-     //  if (taskid == MASTER) {
-     //     pi = pisum/numtasks;
-     //     avepi = ((avepi * i) + pi)/(i + 1); 
-     //     printf("   After %8d throws, average value of pi = %10.8f\n",
-     //             (DARTS * (i + 1)),avepi);
-     // }    
-    } 
- //   if (taskid == MASTER) 
-   //printf ("\nReal value of PI: 3.1415926535897 \n");
-
-
+  
     clock_gettime(CLOCK_MONOTONIC, &t1);
    
     matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
