@@ -43,7 +43,7 @@ void initMatrix(int n, double **A, double **B) {
 
 // ikj
 void matrixMultiplicationIKJ(int n, double *A, double *B, double **C, int taskid, int numtasks) {
-    int i, j, k;
+ //   int i, j, k;
     
     for (int i = taskid * n / numtasks; i < (taskid + 1) * n / numtasks;
          i++) {
@@ -69,7 +69,7 @@ void displayResult(double time, int N, double *A, double *B, double *C) {
 
 
 int main(int argc, char **argv) {
-    int n, numtasks, taskid, tasksz, tid;
+    int n, numtasks, taskid, tasksz, tid, allsz;
     struct timespec t1, t2;
     double time_pass, time_sec, time_nsec;
     checkArgc(argc);
