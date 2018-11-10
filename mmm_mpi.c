@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
         
         matrixMultiplicationIKJ(n, MASTER, numtasks, A, B, &C);
         
-        for (int i = 1; i <= numtasks; i++) {
+        for (int i = 1; i < numtasks; i++) {
             MPI_Recv(&C, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
         }
         clock_gettime(CLOCK_MONOTONIC, &t2);
