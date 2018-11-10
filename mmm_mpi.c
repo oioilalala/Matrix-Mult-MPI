@@ -97,16 +97,14 @@ int main(int argc, char **argv) {
         matrixMultiplicationIKJ(n, MASTER, numtasks, A, B, &C);
         
         for (int i = 1; i <= numtasks; i++) {
-            MPI_Recv(&partC, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
-            C += partC;
+            MPI_Recv(&C, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
         }
     } else {
-        double *partC = malloc(tasksz * sizeof(double));
         MPI_Recv(&tasksz, 1, MPI_INT, MASTER, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(&A, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(&B, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD, &status);
-        matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &partC);
-        MPI_Send(&partC, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD);
+        MPI_Recv(&A, tasksz, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(&B, tasksz, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD, &status);
+        matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
+        MPI_Send(&C, tasksz, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD);
     }
     
     //signals
