@@ -42,8 +42,67 @@ void initMatrix(int n, double **A, double **B) {
 
 
 // ikj
-void matrixMultiplicationIKJ(int n, int taskid, int numtasks, double *A, double *B, double **C) {
-    int i, j, k;
+void matrixMultiplicationIKJ(int n, double *A, double *B, double **C) {
+    int tid, i, j, k, numtasks, taskid, tasksz;
+    
+    MPI_Status status;
+    MPI_Init(&argc,&argv);
+    MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
+    MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
+    tasksz = n * n / numtasks;
+    
+    if (taskid == MASTER) {
+        double *A = malloc(n * n * sizeof(double));
+        double *B = malloc(n * n * sizeof(double));
+        double *C = malloc(n * n * sizeof(double));
+        initMatrix(n, &A, &B);
+        for (tid = 1; tid < numtasks; tid++) {
+            MPI_Send(&tasksz, 1, MPI_INT, tid, 0, MPI_COMM_WORLD);
+            for (i = tid * n/numtasks; i < (tid + 1) * n/numtasks; i++) {
+                for (k = 0; k < n; k++) {
+                    MPI_Send(&A[i * n + k], 1, MPI_DOUBLE, tid, 0, MPI_COMM_WORLD);
+                    for (j = 0; j < n; j++) {
+                        MPI_Send(&B[k * n + j], 1, MPI_DOUBLE, tid, 0, MPI_COMM_WORLD);
+                    }
+                }
+            }
+        }
+        
+        for (i = taskid * n/numtasks; i < (taskid + 1) * n/numtasks; i++) {
+            for (k = 0; k < n; k++) {
+                double r = A[i * n + k];
+                for (j = 0; j < n; j++) {
+                    (*C)[i * n + j] += r * B[k * n + j];
+                    //(*C)[i*n+j]=(*C)[i*n+j]+r*B[k*n+j];
+                }
+            }
+        }
+        
+        for (int i = 1; i < numtasks; i++) {
+    //        MPI_Recv(&partC, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
+            MPI_Gather(&partC, tasksz, MPI_DOUBLE, C, tasksz, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+        }
+    } 
+    else 
+    {
+        double *partC = malloc(tasksz * sizeof(double));
+        MPI_Recv(&tasksz, 1, MPI_INT, MASTER, 0, MPI_COMM_WORLD, &status);
+        for (i = tid * n/numtasks; i < (tid + 1) * n/numtasks; i++) {
+                for (k = 0; k < n; k++) {
+                    MPI_Recv(&A[i * n + k], 1, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD, &status);
+                    double r = A[i * n + k];
+                    for (j = 0; j < n; j++) {
+                        MPI_Recv(&B[k * n + j], 1, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD, &status);
+                        (*partC)[i * n + j] += r * B[k * n + j];
+                        MPI_Send(&partC, 1, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD);
+                    }
+                }
+            }
+    }
+    
+    MPI_Finalize();
+    
+    /*
     for (i = taskid * n/numtasks; i < (taskid + 1) * n/numtasks; i++) {
         for (k = 0; k < n; k++) {
             double r = A[i * n + k];
@@ -53,6 +112,7 @@ void matrixMultiplicationIKJ(int n, int taskid, int numtasks, double *A, double 
             }
         }
     }
+    */
     
 }
 
@@ -67,46 +127,15 @@ void displayResult(double time, int N, double *A, double *B, double *C) {
 
 
 int main(int argc, char **argv) {
-    int n,numtasks,taskid,tasksz;
+    int n;
     struct timespec t1, t2;
     double time_pass, time_sec, time_nsec;
     checkArgc(argc);
     readArgv(argv, &n);
-    double *A = malloc(n * n * sizeof(double));
-    double *B = malloc(n * n * sizeof(double));
-    double *C = malloc(n * n * sizeof(double));
-    initMatrix(n, &A, &B);
-        
-    MPI_Status status;
-    MPI_Init(&argc,&argv);
-    MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
-    MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
   
     clock_gettime(CLOCK_MONOTONIC, &t1);
-    
-    tasksz = n * n / numtasks;
-    if (taskid == MASTER) {
-    //    for (int i = 1; i < numtasks; i++) {
-    //        matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
-    //        MPI_Send(&tasksz, 1, MPI_INT, taskid, 0, MPI_COMM_WORLD);
-    //        MPI_Send(&A, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD);
-    //        MPI_Send(&B, tasksz, MPI_DOUBLE, taskid, 0, MPI_COMM_WORLD);
-    //    }
-        
-        matrixMultiplicationIKJ(n, MASTER, numtasks, A, B, &C);
-        
-        for (int i = 1; i < numtasks; i++) {
-            MPI_Recv(&C, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
-        }
-        clock_gettime(CLOCK_MONOTONIC, &t2);
-    } else {
-    //    MPI_Recv(&tasksz, 1, MPI_INT, MASTER, 0, MPI_COMM_WORLD, &status);
-    //    MPI_Recv(&A, tasksz, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD, &status);
-    //    MPI_Recv(&B, tasksz, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD, &status);
-        matrixMultiplicationIKJ(n, taskid, numtasks, A, B, &C);
-        MPI_Send(&C, tasksz, MPI_DOUBLE, MASTER, 0, MPI_COMM_WORLD);
-    }
-    MPI_Finalize();
+    matrixMultiplicationIKJ(int n, double *A, double *B, double **C) 
+    clock_gettime(CLOCK_MONOTONIC, &t2);
     //signals
     //MPI reduce??
     
