@@ -74,6 +74,8 @@ int main(int argc, char **argv) {
     double time_pass, time_sec, time_nsec;
     
       printf("0");
+    
+    /*
     MPI_Init(&argc,&argv);
         printf("0");
     MPI_Status status;
@@ -147,6 +149,6 @@ int main(int argc, char **argv) {
     MPI_Finalize();
     //signals
     //MPI reduce??
-    
+   */ 
     return 0;
 }
