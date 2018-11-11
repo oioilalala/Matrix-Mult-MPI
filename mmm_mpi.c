@@ -105,6 +105,10 @@ int main(int argc, char **argv) {
         
         for (tid = 1; tid < numtasks; tid++) {
             MPI_Recv(&C[tid * tasksz], tasksz, MPI_DOUBLE, tid, 2, MPI_COMM_WORLD, &status);
+            int sender = status.MPI_SOURCE;
+
+            printf("%f returned from process %d\n", C[tid * tasksz], sender);
+     
         }
         
         clock_gettime(CLOCK_MONOTONIC, &t2);
