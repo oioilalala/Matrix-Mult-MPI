@@ -73,10 +73,15 @@ int main(int argc, char **argv) {
     struct timespec t1, t2;
     double time_pass, time_sec, time_nsec;
     
+      printf("0");
     MPI_Init(&argc,&argv);
+        printf("0");
     MPI_Status status;
+        printf("0");
     MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
+        printf("0");
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
+        printf("0");
    
       printf("1");
      
