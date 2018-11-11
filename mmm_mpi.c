@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
         double *B = malloc(n * n * sizeof(double));
         double *C = malloc(n * n * sizeof(double) / tasksz);
         
-        MPI_Recv(&B[0], allsz, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(&B[0], n * n, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&A[taskid * tasksz], tasksz, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
         matrixMultiplicationIKJ(n,A,B,&C,taskid,numtasks);
         MPI_Send(&C[0], tasksz, MPI_DOUBLE, taskid, 2, MPI_COMM_WORLD);
