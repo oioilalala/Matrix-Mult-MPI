@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
         MPI_Recv(&B[0], allsz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD, &status);
         MPI_Recv(&A[taskid * tasksz], tasksz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD, &status);
         matrixMultiplicationIKJ(n,A,B,&C,taskid,numtasks);
-        MPI_Send(&C[tid * tasksz], tasksz, MPI_DOUBLE, taskid, 1, MPI_COMM_WORLD);
+        MPI_Send(&C[taskid * tasksz], tasksz, MPI_DOUBLE, taskid, 1, MPI_COMM_WORLD);
         
     }
     MPI_Finalize();
