@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
         for (tid = 1; tid < numtasks; tid++) {
             MPI_Send(&allsz, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&tasksz, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
-            MPI_Send(&B, allsz, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
+            MPI_Send(&B[0], allsz, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&A[tid * tasksz], tasksz, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
         }
         
@@ -124,10 +124,10 @@ int main(int argc, char **argv) {
         double *B = malloc(n * n * sizeof(double));
         double *C = malloc(n * n * sizeof(double) / tasksz);
         
-        MPI_Recv(&B, allsz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD, &status);
+        MPI_Recv(&B[0], allsz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD, &status);
         MPI_Recv(&A[taskid * tasksz], tasksz, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD, &status);
         matrixMultiplicationIKJ(n,A,B,&C,taskid,numtasks);
-        MPI_Send(&C, tasksz, MPI_DOUBLE, taskid, 1, MPI_COMM_WORLD);
+        MPI_Send(&C[tid * tasksz], tasksz, MPI_DOUBLE, taskid, 1, MPI_COMM_WORLD);
         
     }
     MPI_Finalize();
