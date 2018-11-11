@@ -78,7 +78,8 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
    
-    
+      printf("1");
+     
     clock_gettime(CLOCK_MONOTONIC, &t1);
     
     if (taskid == MASTER) {
@@ -87,13 +88,15 @@ int main(int argc, char **argv) {
         tasksz = n * n / numtasks;
         allsz = n * n;
         
+          printf("2");
+     
         double *A = malloc(n * n * sizeof(double));
         double *B = malloc(n * n * sizeof(double));
         double *C = malloc(n * n * sizeof(double));
         
-        
         initMatrix(n, &A, &B);
-        
+          printf("3");
+     
         clock_gettime(CLOCK_MONOTONIC, &t1);
         for (tid = 1; tid < numtasks; tid++) {
            
@@ -102,7 +105,8 @@ int main(int argc, char **argv) {
             MPI_Send(&B[0], allsz, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&A[tid * tasksz], tasksz, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
         }
-        
+          printf("4");
+     
         for (tid = 1; tid < numtasks; tid++) {
             MPI_Recv(&C[tid * tasksz], tasksz, MPI_DOUBLE, tid, 2, MPI_COMM_WORLD, &status);
             int sender = status.MPI_SOURCE;
