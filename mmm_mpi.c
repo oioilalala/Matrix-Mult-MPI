@@ -75,8 +75,8 @@ int main(int argc, char **argv) {
     double time_pass, time_sec, time_nsec;
     */
       printf("0");
+    int numtasks, taskid;
     
-    /*
     MPI_Init(&argc,&argv);
         printf("0");
     MPI_Status status;
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
         printf("0");
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
         printf("0");
-   
+   /*
       printf("1");
      
     clock_gettime(CLOCK_MONOTONIC, &t1);
