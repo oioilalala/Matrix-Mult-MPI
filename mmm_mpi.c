@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
             MPI_Send(&myrow, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&B[0], n * n, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&A[offset], myrow * n, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
-            offset += myrow;
+            offset += myrow * n;
         }
      
         for (tid = 1; tid < numtasks; tid++) {
