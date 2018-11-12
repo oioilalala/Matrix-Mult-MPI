@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
         */
         
         printf("master\n");
-        MPI_Finalize();
+       
     }else {
        /*
         MPI_Recv(&n, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
         */
          printf("worker\n");
     }
-  //  MPI_Finalize();
+    MPI_Finalize();
      
     return 0;
 }
