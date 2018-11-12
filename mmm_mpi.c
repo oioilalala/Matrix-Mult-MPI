@@ -70,7 +70,7 @@ void displayResult(double time, int N, double *A, double *B, double *C) {
 
 int main(int argc, char **argv) {
     
-    int n, numtasks, taskid, tasksz, rowpertask, leftover, tid, offset, myrow;
+    int n, numtasks, taskid, rowpertask, leftover, tid, offset, myrow;
   
     struct timespec t1, t2;
     double time_pass, time_sec, time_nsec;
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         
         checkArgc(argc);
         readArgv(argv, &n);
-        tasksz = n * n / (numtasks - 1);
+  //      tasksz = n * n / (numtasks - 1);
   //      allsz = n * n;
      
         double *A = malloc(n * n * sizeof(double));
@@ -134,15 +134,15 @@ int main(int argc, char **argv) {
         MPI_Recv(&offset, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&myrow, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
         
-        double *A = malloc(n * n * sizeof(double) / tasksz);
+        double *A = malloc(n * myrow * sizeof(double));
         double *B = malloc(n * n * sizeof(double));
-        double *C = malloc(n * n * sizeof(double) / tasksz);
+        double *C = malloc(n * myrow * sizeof(double));
         
         MPI_Recv(&B[0], n * n, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&A[0], n * myrow, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
-        matrixMultiplicationIKJ(n,A,B,&C);
-        MPI_Send(&offset, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD, &status);
-        MPI_Send(&myrow, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD, &status);
+        matrixMultiplicationIKJ(n,A,B,&C,myrow);
+        MPI_Send(&offset, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
+        MPI_Send(&myrow, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
         MPI_Send(&C[0], n * myrow, MPI_DOUBLE, taskid, 2, MPI_COMM_WORLD);
         
     }
