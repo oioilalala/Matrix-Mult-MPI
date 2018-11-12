@@ -42,10 +42,10 @@ void initMatrix(int n, double **A, double **B) {
 
 
 // ikj
-void matrixMultiplicationIKJ(int n, double *A, double *B, double **C, int myrow) {
+void matrixMultiplicationIKJ(int n, double *A, double *B, double **C, int myrow, int taskid) {
  //   int i, j, k;
     
-    for (int i = 0; i < myrow;
+    for (int i = (taskid - 1) * myrow; i < (taskid) * myrow;
          i++) {
       for (int k = 0; k < n; k++) {
         double r = A[i * n + k];
@@ -156,15 +156,15 @@ int main(int argc, char **argv) {
         
         MPI_Recv(&B[0], n * n, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
          printf("worker %d\n", taskid);  
-        MPI_Recv(&A[0], n * myrow, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(&A[offset], n * myrow, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
           printf("worker %d\n", taskid); 
-        matrixMultiplicationIKJ(n,A,B,&C,myrow);
+        matrixMultiplicationIKJ(n,A,B,&C,myrow,taskid);
           printf("worker %d\n", taskid); 
         MPI_Send(&offset, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
           printf("worker %d,%d\n", taskid, offset); 
         MPI_Send(&myrow, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
           printf("worker %d\n", taskid); 
-        MPI_Send(&C[0], n * myrow, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD);
+        MPI_Send(&C[offset], n * myrow, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD);
           printf("worker %d,%d\n", taskid, n * myrow); 
         
         free(A);
