@@ -51,6 +51,7 @@ void matrixMultiplicationIKJ(int n, double *A, double *B, double **C, int myrow,
         double r = A[i * n + k];
         for (int j = 0; j < n; j++) {
           (*C)[i * n + j] += r * B[k * n + j];
+            printf("%f ",(*C)[i * n + j]);
         }
       }
     }
