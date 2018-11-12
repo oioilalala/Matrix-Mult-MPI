@@ -4,7 +4,7 @@
 #include <time.h>
 #include <mpi.h>
 #define MASTER 0
-unsigned int matrix_checksum(int N, double *M, sizeof(double));
+unsigned int matrix_checksum(int N, double *M, unsigned int size);
 
 /*
  * This function is to check if has correct number of arguments provided
@@ -63,9 +63,9 @@ void matrixMultiplicationIKJ(int n, double *A, double *B, double **C, int myrow)
 // display the time and checksum
 void displayResult(double time, int N, double *A, double *B, double *C) {
     printf("Running time: %f secs\n", time);
-    printf("A: %u\n", matrix_checksum(N, A));
-    printf("B: %u\n", matrix_checksum(N, B));
-    printf("C: %u\n", matrix_checksum(N, C));
+    printf("A: %u\n", matrix_checksum(N, A, sizeof(double)));
+    printf("B: %u\n", matrix_checksum(N, B, sizeof(double)));
+    printf("C: %u\n", matrix_checksum(N, C, sizeof(double)));
 }
 
 
