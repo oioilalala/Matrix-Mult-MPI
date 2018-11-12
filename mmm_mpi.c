@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
             MPI_Recv(&myrow, 1, MPI_INT, tid, 2, MPI_COMM_WORLD, &status);
             printf("master from %d\n", tid);
             MPI_Recv(&C[offset], myrow * n, MPI_DOUBLE, tid, 2, MPI_COMM_WORLD, &status);
-            printf("master from %d\n", tid);
+            printf("master from %d,%d\n", tid,myrow * n);
             
         }
         
