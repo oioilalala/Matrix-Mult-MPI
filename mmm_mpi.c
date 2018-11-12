@@ -70,8 +70,8 @@ void displayResult(double time, int N, double *A, double *B, double *C) {
 
 int main(int argc, char **argv) {
     
-    int n, numtasks, taskid, rowpertask, leftover, tid, offset, myrow;
-  
+ //   int n, numtasks, taskid, rowpertask, leftover, tid, offset, myrow;
+  int numtasks, taskid;
     struct timespec t1, t2;
     double time_pass, time_sec, time_nsec;
     
