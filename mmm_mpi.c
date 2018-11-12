@@ -72,15 +72,15 @@ int main(int argc, char **argv) {
     
     //int n, numtasks, taskid, tasksz, tid, allsz;
     int numtasks, taskid;
-    struct timespec t1, t2;
-    double time_pass, time_sec, time_nsec;
+//    struct timespec t1, t2;
+//    double time_pass, time_sec, time_nsec;
     
     MPI_Init(&argc,&argv);
-    MPI_Status status;
+//    MPI_Status status;
     MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
      
-    clock_gettime(CLOCK_MONOTONIC, &t1);
+   // clock_gettime(CLOCK_MONOTONIC, &t1);
     
     if (taskid == MASTER) { 
         /*
