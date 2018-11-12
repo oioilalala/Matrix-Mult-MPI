@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
      
     if (taskid == MASTER) { 
-        
+  /*      
         checkArgc(argc);
         readArgv(argv, &n);
   //      tasksz = n * n / (numtasks - 1);
@@ -126,9 +126,11 @@ int main(int argc, char **argv) {
         free(A);
         free(B);
         free(C);
-        
+ */
+        printf("master\n");
        
     }else {
+        /*
      
         MPI_Recv(&n, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&offset, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
@@ -148,7 +150,8 @@ int main(int argc, char **argv) {
         free(A);
         free(B);
         free(C);
-        
+        */
+        printf("worker\n");
     }
     MPI_Finalize();
      
