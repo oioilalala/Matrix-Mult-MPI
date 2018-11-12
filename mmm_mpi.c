@@ -70,50 +70,44 @@ void displayResult(double time, int N, double *A, double *B, double *C) {
 
 int main(int argc, char **argv) {
     
-    //int n, numtasks, taskid, tasksz, tid, allsz;
-    int numtasks, taskid;
-//    struct timespec t1, t2;
-//    double time_pass, time_sec, time_nsec;
+    int n, numtasks, taskid, tasksz, tid, allsz;
+  
+    struct timespec t1, t2;
+    double time_pass, time_sec, time_nsec;
     
     MPI_Init(&argc,&argv);
-//    MPI_Status status;
+    MPI_Status status;
     MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
      
-   // clock_gettime(CLOCK_MONOTONIC, &t1);
     
     if (taskid == MASTER) { 
-        /*
+        
         checkArgc(argc);
         readArgv(argv, &n);
         tasksz = n * n / numtasks;
         allsz = n * n;
-        
-          printf("2");
      
         double *A = malloc(n * n * sizeof(double));
         double *B = malloc(n * n * sizeof(double));
         double *C = malloc(n * n * sizeof(double));
         
         initMatrix(n, &A, &B);
-          printf("3");
      
         clock_gettime(CLOCK_MONOTONIC, &t1);
+        
         for (tid = 1; tid < numtasks; tid++) {
-           
             MPI_Send(&n, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&tasksz, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&B[0], allsz, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&A[tid * tasksz], tasksz, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
         }
-          printf("4");
      
         for (tid = 1; tid < numtasks; tid++) {
             MPI_Recv(&C[tid * tasksz], tasksz, MPI_DOUBLE, tid, 2, MPI_COMM_WORLD, &status);
             int sender = status.MPI_SOURCE;
 
             printf("%f returned from process %d\n", C[tid * tasksz], sender);
-     
         }
         
         clock_gettime(CLOCK_MONOTONIC, &t2);
@@ -127,12 +121,12 @@ int main(int argc, char **argv) {
         free(C);
         
         
-        */
+        
         
         printf("master\n");
        
     }else {
-       /*
+     
         MPI_Recv(&n, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&tasksz, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
         
@@ -144,7 +138,7 @@ int main(int argc, char **argv) {
         MPI_Recv(&A[taskid * tasksz], tasksz, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
         matrixMultiplicationIKJ(n,A,B,&C,taskid,numtasks);
         MPI_Send(&C[0], tasksz, MPI_DOUBLE, taskid, 2, MPI_COMM_WORLD);
-        */
+        
          printf("worker\n");
     }
     MPI_Finalize();
