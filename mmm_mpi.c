@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
     
     MPI_Init(&argc,&argv);
         printf("0");
-    MPI_Status status;
+  //  MPI_Status status;
         printf("0");
     MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
         printf("0");
