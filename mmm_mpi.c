@@ -161,11 +161,11 @@ int main(int argc, char **argv) {
         matrixMultiplicationIKJ(n,A,B,&C,myrow);
           printf("worker %d\n", taskid); 
         MPI_Send(&offset, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
-          printf("worker %d\n", taskid); 
+          printf("worker %d,%d\n", taskid, offset); 
         MPI_Send(&myrow, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
           printf("worker %d\n", taskid); 
         MPI_Send(&C[0], n * myrow, MPI_DOUBLE, MASTER, 2, MPI_COMM_WORLD);
-          printf("worker %d\n", taskid); 
+          printf("worker %d,%d\n", taskid, n * myrow); 
         
         free(A);
         free(B);
