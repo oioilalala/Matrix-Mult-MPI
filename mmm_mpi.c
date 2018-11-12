@@ -145,6 +145,10 @@ int main(int argc, char **argv) {
         MPI_Send(&myrow, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
         MPI_Send(&C[0], n * myrow, MPI_DOUBLE, taskid, 2, MPI_COMM_WORLD);
         
+        free(A);
+        free(B);
+        free(C);
+        
     }
     MPI_Finalize();
      
