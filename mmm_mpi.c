@@ -4,7 +4,7 @@
 #include <time.h>
 #include <mpi.h>
 #define MASTER 0
-unsigned int matrix_checksum(int N, double *M);
+unsigned int matrix_checksum(int N, double *M, sizeof(double));
 
 /*
  * This function is to check if has correct number of arguments provided
