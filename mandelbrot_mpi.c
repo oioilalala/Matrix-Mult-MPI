@@ -4,15 +4,17 @@
 #include <time.h>
 #include <complex.h>
 
-unsigned int matrix_checksum(int N, void *M, unsigned int size);
-
 #define AXIS_LEN 1024
 #define BILLION 1e9
+
+unsigned int matrix_checksum(int N, void *M, unsigned int size);
+
 
 int iteratePoint(double x, double y, int cutoff){
     double complex c = x + y * I;
     double complex result = 0;
     int i;
+
     for(i = 0; (i < cutoff) && (cabs(result) < 2.0); i++){
         result = cpow(result, 2) + c;
     }
@@ -36,6 +38,7 @@ void calcPlane(int *plane, int x_center, int y_center, int zoom, int cutoff){
 
     double time = (finish.tv_sec - start.tv_sec) +
                   (finish.tv_nsec - start.tv_nsec) / BILLION;
+
     printf("Runtime: %f\n", time);
     printf("M: %u\n", matrix_checksum(AXIS_LEN, plane, sizeof(int)));
 }
