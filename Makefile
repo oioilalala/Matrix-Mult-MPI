@@ -1,6 +1,6 @@
 targets := mmm_mpi mandelbrot_mpi 
 mobjs	:= matrix_checksum.o mmm_mpi.o
-objs	:= mandelbrot_mpi.o 
+objs	:= matrix_checksum.o mandelbrot_mpi.o 
 CC	:= mpicc
 
 CFLAGS	:= -Wall -Werror -O2
