@@ -67,16 +67,16 @@ int main(int argc, char **argv) {
     MPI_Status status;
     MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
     MPI_Comm_rank(MPI_COMM_WORLD,&taskid);
-    
-    if (numtasks < 2) {
-        if (!numtasks)
-            fprintf(stderr, "Error: not enough tasks.\n");        
-        MPI_Abort(MPI_COMM_WORLD, 1);    
-    }
-     
+      
     if (taskid == MASTER) {                                         /* master process */
         checkArgc(argc);
         readArgv(argv, &n);
+        if (numtasks == 1) {
+            if (!numtasks)
+                fprintf(stderr, "Error: not enough tasks.\n");        
+            MPI_Abort(MPI_COMM_WORLD, 1);    
+        }
+   
  
         double *A = malloc(n * n * sizeof(double));
         double *B = malloc(n * n * sizeof(double));
