@@ -18,7 +18,7 @@ void checkArgc(int argc) {
 void readArgv(char **argv, int *n) {
     *n = atoi(argv[1]);
     if (*n <= 0 ) {
-        fprintf(stderr, "Error: wrong matrix order (0 < N)\n");
+        fprintf(stderr, "Error: wrong matrix order \(N > 0\)\n");
         exit(1);
     }
 }
