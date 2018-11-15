@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <mpi.h>
 #include <complex.h>
 
-#define AXIS_LEN 1024
+#define RES 1024
 #define BILLION 1e9
+#define MASTER 0
 
 unsigned int matrix_checksum(int N, void *M, unsigned int size);
 
@@ -22,60 +24,120 @@ int iteratePoint(double x, double y, int cutoff){
     return i;
 }
 
-void calcPlane(int *plane, int x_center, int y_center, int zoom, int cutoff){
-    struct timespec start, finish;
-    double dist = pow(2, -1 * zoom);
-
-    // Iterate through the 1024x1024 points in the map, passing x and y
-    // to iteratePoint() to determine Mandelbrot membership for each
-    clock_gettime(CLOCK_REALTIME, &start);
-    for(int i = 0; i < AXIS_LEN; i++){
-        for(int j = 0; j < AXIS_LEN; j++){
-            plane[i * AXIS_LEN + j] = iteratePoint(dist * j, dist * i, cutoff);
-        }
-    }
-    clock_gettime(CLOCK_REALTIME, &finish);
-
-    double time = (finish.tv_sec - start.tv_sec) +
-                  (finish.tv_nsec - start.tv_nsec) / BILLION;
-
-    printf("Runtime: %f\n", time);
-    printf("M: %u\n", matrix_checksum(AXIS_LEN, plane, sizeof(int)));
-}
-
-int main(int argc, char*argv[]){
-    double x_center, y_center;
-    int zoom, cutoff, *plane;
+void getInput(int argc, char *argv[], double *x_cen, double *y_cen, int *zoom,
+                int *cutoff){
+    *x_cen = atof(argv[1]);
+    *y_cen = atof(argv[2]);
+    *zoom = atoi(argv[3]);
+    *cutoff = atoi(argv[4]);
 
     if(5 != argc){
         fprintf(stderr, "Usage: %s xcenter ycenter zoom cutoff", argv[0]);
-        return 1;
+        exit(1);
     }
-
     // Get and validate arguments
-    x_center = atof(argv[1]);
-    y_center = atof(argv[2]);
-    zoom = atoi(argv[3]);
-    cutoff = atoi(argv[4]);
-
-    if(10 < x_center || -10 > x_center){
+    if(10 < *x_cen || -10 > *x_cen){
         fprintf(stderr, "Error: wrong x-center (-10.000000 <= N <= 10.000000)\n");
-        return 1;
+        exit(1);
     }
-    if(10 < y_center || -10 > y_center) {
+    if(10 < *y_cen || -10 > *y_cen) {
         fprintf(stderr, "Error: wrong y-center (-10.000000 <= N <= 10.000000)\n");
-        return 1;
+        exit(1);
     }
-    if(100 < zoom || 0 > zoom){
+    if(100 < *zoom || 0 > *zoom){
         fprintf(stderr, "Error: wrong zoom (0 <= N <= 100)\n");
-        return 1;
+        exit(1);
     }
-    if(1000 < cutoff || 50 > cutoff){
+    if(1000 < *cutoff || 50 > *cutoff){
         fprintf(stderr, "Error: wrong cutoff (50 <= N <= 1000)");
-        return 1;
+        exit(1);
+    }
+}
+
+int main(int argc, char*argv[]){
+    double x_center, y_center, dist;
+    int zoom, cutoff, comm_size, comm_rank, next;
+    struct timespec start, finish;
+
+    // Initializing mpi
+    MPI_Status status;
+    MPI_Init(&argc,&argv);
+    MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
+    MPI_Comm_rank(MPI_COMM_WORLD,&comm_rank);
+
+    if(MASTER == comm_rank){        // Master code
+        int working_tasks,next,source_id;
+        int tid;
+        working_tasks = 0;
+        next = 0;                   // Row
+        
+        getInput(argc, argv, &x_center, &y_center, &zoom, &cutoff);
+
+        int *plane = malloc(sizeof(int) * RES * RES);
+        dist = pow(2, -1 * zoom);
+
+        clock_gettime(CLOCK_REALTIME, &start);
+        
+        for (tid=1;tid<comm_size;tid++) {
+            MPI_Send(&x_center, 1, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
+            MPI_Send(&y_center, 1, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
+            MPI_Send(&dist, 1, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
+            MPI_Send(&cutoff, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
+        }
+        
+        for (tid=1;tid<comm_size;tid++) {
+            MPI_Send(&next, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
+            next++;
+            working_tasks++;
+        }
+        
+        while(working_tasks>0){
+            MPI_Recv(&plane[next * RES], RES, MPI_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &status);
+            working_tasks--;
+            source_id = status.MPI_SOURCE;
+            
+            if(next < RES) {
+                next++;
+                MPI_Send(&next, 1, MPI_INT, source_id, 1, MPI_COMM_WORLD);
+                working_tasks++;
+            }  else {
+                MPI_Send(&next, 0, MPI_INT, source_id, 3, MPI_COMM_WORLD);
+            }
+        }
+
+        clock_gettime(CLOCK_REALTIME, &finish);
+
+        double time = (finish.tv_sec - start.tv_sec) +
+                      (finish.tv_nsec - start.tv_nsec) / BILLION;
+        printf("Runtime: %f\n", time);
+        printf("M: %u\n", matrix_checksum(RES, plane, sizeof(int)));
+
+        free(plane);
+    }
+    else{       // Slave code
+
+        int *plane = malloc(sizeof(int) * RES);
+        int stop = 0;
+        
+        MPI_Recv(&x_center, 1, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(&y_center, 1, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(&dist, 1, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(&cutoff, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
+        
+        while (!stop) {
+            MPI_Recv(&next, 1, MPI_INT, MASTER, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            if (status.MPI_TAG == 3) {
+                stop = 1;
+            }
+            for (int i = 0; i < RES; i++){
+              plane[i]=iteratePoint(dist * next + x_center, dist * i + y_center, cutoff);
+            }
+            MPI_Send(&plane[0], RES, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
+        }
+        free(plane);
     }
 
-    plane = malloc(sizeof(int) * AXIS_LEN * AXIS_LEN);
+    MPI_Finalize();
 
-    calcPlane(plane, x_center, y_center, zoom, cutoff);
+    return 0;
 }
