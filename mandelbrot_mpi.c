@@ -96,14 +96,18 @@ int main(int argc, char*argv[]){
             working_tasks--;
             source_id = status.MPI_SOURCE;
             
-            if(next < RES) {
+            if(next < RES-1) {
                 next++;
                 MPI_Send(&next, 1, MPI_INT, source_id, 1, MPI_COMM_WORLD);
                 working_tasks++;
+                
             }  else {
                 MPI_Send(&next, 0, MPI_INT, source_id, 3, MPI_COMM_WORLD);
+		
             }
+     
         }
+         printf("master received %d\n",next);
 
         clock_gettime(CLOCK_REALTIME, &finish);
 
@@ -113,27 +117,28 @@ int main(int argc, char*argv[]){
         printf("M: %u\n", matrix_checksum(RES, plane, sizeof(int)));
 
         free(plane);
+
     }
     else{       // Slave code
 
         int *plane = malloc(sizeof(int) * RES);
-        int stop = 0;
         
         MPI_Recv(&x_center, 1, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&y_center, 1, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&dist, 1, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&cutoff, 1, MPI_INT, MASTER, 1, MPI_COMM_WORLD, &status);
         
-        while (!stop) {
-            MPI_Recv(&next, 1, MPI_INT, MASTER, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            if (status.MPI_TAG == 3) {
-                stop = 1;
-            }
+        while ( (MPI_Recv(&next, 1, MPI_INT, MASTER, MPI_ANY_TAG, MPI_COMM_WORLD, &status)==MPI_SUCCESS) && (status.MPI_TAG == 1)) {
+        
             for (int i = 0; i < RES; i++){
-              plane[i]=iteratePoint(dist * next + x_center, dist * i + y_center, cutoff);
+              plane[i]=iteratePoint(dist * i + x_center, dist * next + y_center, cutoff);
             }
             MPI_Send(&plane[0], RES, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
+              
+        printf("worker sent %d\n",next);
         }
+        
+
         free(plane);
     }
 
