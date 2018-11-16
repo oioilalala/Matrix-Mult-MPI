@@ -18,7 +18,10 @@ int iteratePoint(double x, double y, int cutoff){
     double complex result = 0;
     int i;
 
-    for(i = 0; (i < cutoff) && (cabs(result) < 2.0); i++){
+    for(i = 0; i < cutoff; i++){
+	if(cabs(result) > 2){
+		break;
+	}
         result = cpow(result, 2) + c;
     }
 
@@ -38,7 +41,7 @@ void writeImage(int *pgmdata, double x, double y,
     for (int i=0; i<1024; i++){
 	for (int j=0; j<1024; j++){
             temp = pgmdata[i*1024+j];
-            fprintf(outPGM, "%d", temp);
+            fprintf(outPGM, "%d ", temp);
         }
         fprintf(outPGM, "\n");
     }
@@ -118,7 +121,7 @@ int main(int argc, char*argv[]){
             source_id = status.MPI_SOURCE;
        
             MPI_Recv(&plane[next * RES], RES, MPI_INT, source_id, 2, MPI_COMM_WORLD, &status);
-                            printf("master received %d\n",next);
+                            //printf("master received %d\n",next);
 
             working_tasks--;
       
@@ -134,7 +137,7 @@ int main(int argc, char*argv[]){
 	
      
         }
-         printf("master received %d\n",next);
+         //printf("master received %d\n",next);
 
         clock_gettime(CLOCK_REALTIME, &finish);
 
@@ -160,13 +163,13 @@ int main(int argc, char*argv[]){
         while ( (MPI_Recv(&next, 1, MPI_INT, MASTER, MPI_ANY_TAG, MPI_COMM_WORLD, &status)==MPI_SUCCESS) && (status.MPI_TAG == 1)) {
         
             for (int i = 0; i < RES; i++){
-              plane[i]=iteratePoint(dist * i + x_center, dist * next + y_center, cutoff);
+              plane[i]=iteratePoint(dist * next + y_center, dist * i + x_center, cutoff);
             }
 
 	    MPI_Send(&next, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
             MPI_Send(&plane[0], RES, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
               
-            printf("worker %d sent %d", comm_rank, next);
+            //printf("worker %d sent %d", comm_rank, next);
         }
         
 
