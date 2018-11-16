@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -23,6 +24,28 @@ int iteratePoint(double x, double y, int cutoff){
 
     return i;
 }
+
+void writeImage(int *pgmdata, double x, double y, 
+                int zoom, int cutoff){
+    char buf[0x40];
+    int temp = 0;
+    snprintf(buf, sizeof(buf), "mandel_%f_%f_%d_%d.pgm",x,y,zoom,cutoff);    
+    FILE *outPGM;
+    outPGM = fopen(buf,"w");
+    fprintf(outPGM, "P2\n");
+    fprintf(outPGM, "1024 1024\n");
+    fprintf(outPGM, "255\n");
+    for (int i=0; i<1024; i++){
+	for (int j=0; j<1024; j++){
+            temp = pgmdata[i*1024+j];
+            fprintf(outPGM, "%d", temp);
+        }
+        fprintf(outPGM, "\n");
+    }
+    fclose(outPGM);
+   
+}
+
 
 void getInput(int argc, char *argv[], double *x_cen, double *y_cen, int *zoom,
                 int *cutoff){
@@ -69,8 +92,9 @@ int main(int argc, char*argv[]){
         int working_tasks,next,source_id;
         int tid;
         working_tasks = 0;
+        source_id =0 ;
         next = 0;                   // Row
-        
+      // row = 0;
         getInput(argc, argv, &x_center, &y_center, &zoom, &cutoff);
 
         int *plane = malloc(sizeof(int) * RES * RES);
@@ -83,18 +107,21 @@ int main(int argc, char*argv[]){
             MPI_Send(&y_center, 1, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&dist, 1, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&cutoff, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
-        }
-        
-        for (tid=1;tid<comm_size;tid++) {
             MPI_Send(&next, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
             next++;
             working_tasks++;
         }
+ 
         
         while(working_tasks>0){
-            MPI_Recv(&plane[next * RES], RES, MPI_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &status);
-            working_tasks--;
+            MPI_Recv(&next, 1, MPI_INT, MPI_ANY_SOURCE, 2, MPI_COMM_WORLD, &status);
             source_id = status.MPI_SOURCE;
+       
+            MPI_Recv(&plane[next * RES], RES, MPI_INT, source_id, 2, MPI_COMM_WORLD, &status);
+                            printf("master received %d\n",next);
+
+            working_tasks--;
+      
             
             if(next < RES-1) {
                 next++;
@@ -103,8 +130,8 @@ int main(int argc, char*argv[]){
                 
             }  else {
                 MPI_Send(&next, 0, MPI_INT, source_id, 3, MPI_COMM_WORLD);
-		
             }
+	
      
         }
          printf("master received %d\n",next);
@@ -115,6 +142,7 @@ int main(int argc, char*argv[]){
                       (finish.tv_nsec - start.tv_nsec) / BILLION;
         printf("Runtime: %f\n", time);
         printf("M: %u\n", matrix_checksum(RES, plane, sizeof(int)));
+        writeImage(plane, x_center, y_center, zoom, cutoff);
 
         free(plane);
 
@@ -122,6 +150,7 @@ int main(int argc, char*argv[]){
     else{       // Slave code
 
         int *plane = malloc(sizeof(int) * RES);
+
         
         MPI_Recv(&x_center, 1, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(&y_center, 1, MPI_DOUBLE, MASTER, 1, MPI_COMM_WORLD, &status);
@@ -133,11 +162,14 @@ int main(int argc, char*argv[]){
             for (int i = 0; i < RES; i++){
               plane[i]=iteratePoint(dist * i + x_center, dist * next + y_center, cutoff);
             }
+
+	    MPI_Send(&next, 1, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
             MPI_Send(&plane[0], RES, MPI_INT, MASTER, 2, MPI_COMM_WORLD);
               
-        printf("worker sent %d\n",next);
+            printf("worker %d sent %d", comm_rank, next);
         }
         
+
 
         free(plane);
     }
