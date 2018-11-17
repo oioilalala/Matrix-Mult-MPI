@@ -47,6 +47,13 @@ void writeImage(int *pgmdata, double x, double y,
    
 }
 
+void checkArgc(int argc) {
+    if (argc != 5) {
+        fprintf(stderr, "Usage: ./mandelbrot_mpi xcenter ycenter zoom cutoff");
+        exit(1);
+    }
+}
+
 
 void getInput(int argc, char *argv[], double *x_cen, double *y_cen, int *zoom,
                 int *cutoff){
@@ -55,10 +62,6 @@ void getInput(int argc, char *argv[], double *x_cen, double *y_cen, int *zoom,
     *zoom = atoi(argv[3]);
     *cutoff = atoi(argv[4]);
 
-    if(argc != 5){
-        fprintf(stderr, "Usage: ./mandelbrot_mpi xcenter ycenter zoom cutoff");
-        exit(1);
-    }
     // Get and validate arguments
     if(10 < *x_cen || -10 > *x_cen){
         fprintf(stderr, "Error: wrong x-center (-10.000000 <= N <= 10.000000)\n");
@@ -95,6 +98,7 @@ int main(int argc, char*argv[]){
         working_tasks = 0;
         source_id =0 ;
         next = 0;                   // Row
+	checkArgc(argc);
         getInput(argc, argv, &x_center, &y_center, &zoom, &cutoff);
 
         int *plane = malloc(sizeof(int) * RES * RES);
