@@ -49,7 +49,7 @@ void writeImage(int *pgmdata, double x, double y,
 
 void checkArgc(int argc) {
     if (argc != 5) {
-        fprintf(stderr, "Usage: ./mandelbrot_mpi xcenter ycenter zoom cutoff");
+        fprintf(stderr, "Usage: mandelbrot_mpi xcenter ycenter zoom cutoff");
         exit(1);
     }
 }
