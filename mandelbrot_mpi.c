@@ -131,6 +131,7 @@ int main(int argc, char*argv[]){
             }  else {
                 MPI_Send(&next, 0, MPI_INT, source_id, 3, MPI_COMM_WORLD);
             }
+	}
             
         clock_gettime(CLOCK_REALTIME, &finish);
 
