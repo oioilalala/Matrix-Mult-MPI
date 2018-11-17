@@ -55,7 +55,7 @@ void getInput(int argc, char *argv[], double *x_cen, double *y_cen, int *zoom,
     *zoom = atoi(argv[3]);
     *cutoff = atoi(argv[4]);
 
-    if(5 != argc){
+    if(argc != 5){
         fprintf(stderr, "Usage: ./mandelbrot_mpi xcenter ycenter zoom cutoff");
         exit(1);
     }
