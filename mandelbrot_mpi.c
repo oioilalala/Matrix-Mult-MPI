@@ -85,6 +85,7 @@ int main(int argc, char*argv[]){
     double x_center, y_center, dist;
     int zoom, cutoff, comm_size, comm_rank, next;
     struct timespec start, finish;
+    double time_pass, time_sec, time_nsec;
 
     // Initializing mpi
     MPI_Status status;
@@ -139,9 +140,12 @@ int main(int argc, char*argv[]){
 	}
             
         clock_gettime(CLOCK_REALTIME, &finish);
+	    
+        time_sec = (double)(start.tv_sec - finish.tv_sec);
+        
+        time_nsec = (double)(start.tv_nsec - finish.tv_nsec);
+        time_pass = time_sec + (time_nsec / BILLION);
 
-        double time = (finish.tv_sec - start.tv_sec) +
-                      (finish.tv_nsec - start.tv_nsec) / BILLION;
         printf("Runnig time: %f secs\n", time);
         printf("M: %u\n", matrix_checksum(RES, plane, sizeof(int)));
         writeImage(plane, x, y, zoom, cutoff);
