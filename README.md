@@ -32,6 +32,7 @@ MPI is terminated by `MPI_Finalize();`.
 
 #### Timing measurement
 `mpirun -n N ./mandelbrot_mpi -1 -0.2 9 256`
+
 | Number of tasks  | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
 | ---------------- |:---------------:|:---------------:|:---------------:|:---------------:| 
 | 2 (serial)       | 0.065661        | 0.066007        | 0.076338        | 0.069335        |
@@ -47,6 +48,7 @@ MPI is terminated by `MPI_Finalize();`.
 
 #### Timing Measurement
 `mpirun -n N ./mandelbrot_mpi -1 -0.2 9 256`
+
 | Number of tasks  | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
 | ---------------- |:---------------:|:---------------:|:---------------:|:---------------:| 
 | 2 (serial)       | 0.847501        | 0.844279        | 0.844985        | 0.845588        |
