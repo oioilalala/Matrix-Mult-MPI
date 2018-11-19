@@ -129,7 +129,7 @@ int main(int argc, char*argv[]){
             MPI_Recv(&plane[next * RES], RES, MPI_INT, source_id, 2, MPI_COMM_WORLD, &status);
             working_tasks--;
       
-            if(row_sent < RES-1) {
+            if(row_sent < RES) {
                 next = row_sent++;
                 MPI_Send(&next, 1, MPI_INT, source_id, 1, MPI_COMM_WORLD);
                 working_tasks++;
