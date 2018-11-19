@@ -117,6 +117,7 @@ int main(int argc, char*argv[]){
             MPI_Send(&dist, 1, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&cutoff, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
 	    MPI_Send(&next, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
+	    next++;
             row_sent++;
             working_tasks++;
 	    }
