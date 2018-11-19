@@ -141,9 +141,9 @@ int main(int argc, char*argv[]){
             
         clock_gettime(CLOCK_REALTIME, &finish);
 	    
-        time_sec = (double)(start.tv_sec - finish.tv_sec);
+        time_sec = (double)(finish.tv_sec - start.tv_sec);
         
-        time_nsec = (double)(start.tv_nsec - finish.tv_nsec);
+        time_nsec = (double)(finish.tv_nsec - start.tv_nsec);
         time_pass = time_sec + (time_nsec / BILLION);
 
         printf("Runnig time: %f secs\n", time_pass);
