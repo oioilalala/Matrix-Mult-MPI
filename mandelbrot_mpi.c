@@ -146,7 +146,7 @@ int main(int argc, char*argv[]){
         time_nsec = (double)(start.tv_nsec - finish.tv_nsec);
         time_pass = time_sec + (time_nsec / BILLION);
 
-        printf("Runnig time: %f secs\n", time);
+        printf("Runnig time: %f secs\n", time_pass);
         printf("M: %u\n", matrix_checksum(RES, plane, sizeof(int)));
         writeImage(plane, x, y, zoom, cutoff);
 
