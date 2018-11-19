@@ -93,11 +93,11 @@ int main(int argc, char*argv[]){
     MPI_Comm_rank(MPI_COMM_WORLD,&comm_rank);
 
     if(MASTER == comm_rank){        // Master code
-        int working_tasks,next,source_id;
-        int tid;
+        int working_tasks,next,source_id,tid,row_sent;
         working_tasks = 0;
         source_id =0 ;
         next = 0;                   // Row
+	row_sent = 0;
 	checkArgc(argc);
         getInput(argc, argv, &x_center, &y_center, &zoom, &cutoff);
 
@@ -116,8 +116,8 @@ int main(int argc, char*argv[]){
             MPI_Send(&y_center, 1, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&dist, 1, MPI_DOUBLE, tid, 1, MPI_COMM_WORLD);
             MPI_Send(&cutoff, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
-	        MPI_Send(&next, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
-            next++;
+	    MPI_Send(&next, 1, MPI_INT, tid, 1, MPI_COMM_WORLD);
+            row_sent++;
             working_tasks++;
 	    }
  
@@ -128,8 +128,8 @@ int main(int argc, char*argv[]){
             MPI_Recv(&plane[next * RES], RES, MPI_INT, source_id, 2, MPI_COMM_WORLD, &status);
             working_tasks--;
       
-            if(next < RES-1) {
-                next++;
+            if(row_sent < RES-1) {
+                next = row_sent++;
                 MPI_Send(&next, 1, MPI_INT, source_id, 1, MPI_COMM_WORLD);
                 working_tasks++;
             }  else {
