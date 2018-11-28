@@ -46,17 +46,17 @@ MPI is terminated by `MPI_Finalize();`.
 For this program, we utilize MPI to dynamically allocate tasks when generating an image of the Mandelbrot set. Because the image is represented in PGM as a large 2D array of values (ie the number of iterations of the equation used to determine set membership), we decided to parallelize and optimize the computation process by having each worker process in the MPI network calculate a row of values independently. The worker process’ calculated row would then be returned to the master process to compile and present the entire matrix.
 
 #### Master code
-After declaring variables in the main function scope to hold the program arguments `x_center, y_center, zoom, and cutoff`, we initialize MPI and call `checkArgc()` in the master process to validate input and `getInput()` to assign the variables from user input. If an error in the format or range of the command line arguments is found, `checkArgc()` exits the program and reports an appropriate error message. Once the program parameters have been taken from command line input, we get the distance between points on the image using dist = 2<sup>-zoom</sup> and together with `x_center` and `y_center` we find the starting pixel.
+After declaring variables in the main function scope to hold the program arguments `x_center, y_center, zoom, and cutoff`, we initialize MPI and call `checkArgc()` in the master process to validate input and `getInput()` to assign the variables from user input. If an error in the format or range of the command line arguments is found, `checkArgc()` exits the program and reports an appropriate error message. Once the program parameters have been taken from command line input, we get the distance between points on the image using `dist` = 2<sup>-zoom</sup> and together with `x_center` and `y_center` we find the starting pixel.
 
-With the constant values for the image’s x_center, y_center, dist, and cutoff determined, we nearly have enough information to begin creating tasks for other processes. In order to manage and delegate work to worker processes, the master process requires additional variables to track how many processes are active and working. To do this, we use a `working_tasks` variable local to the master process that is updated whenever task parameters are sent to or received from a process. By monitoring this working_tasks variable, we can ensure that we call MPI_Recv to retrieve results for every active process, and not expect any new results if `working_tasks == 0`.
+With the constant values for the image’s `x_center, y_center, dist`, and cutoff determined, we nearly have enough information to begin creating tasks for other processes. In order to manage and delegate work to worker processes, the master process requires additional variables to track how many processes are active and working. To do this, we use a `working_tasks` variable local to the master process that is updated whenever task parameters are sent to or received from a process. By monitoring this working_tasks variable, we can ensure that we call `MPI_Recv` to retrieve results for every active process, and not expect any new results if `working_tasks == 0`.
 
-The master process begins by initializing the values for x_center, y_center, dist, and cutoff in each worker process’ scope. In this initialization loop, we also send next, which corresponds to the index of the next row that a worker process calculates. With these worker processes running, we receive calculated rows by waiting for any process to return their row index, get the ID of the process, and use that ID and row index to replace the appropriate row in the master’s local copy of the matrix with the worker process’ calculated row. We continue incrementing working_tasks and sending new values for next until all of the row indices of the matrix (0-1023) have been sent to a worker process. When this occurs, we send a null value for next with a special tag number (3) to signal the worker processes to stop.
+The master process begins by initializing the values for `x_center`, y_center, `dist`, and cutoff in each worker process’ scope. In this initialization loop, we also send next, which corresponds to the index of the next row that a worker process calculates. With these worker processes running, we receive calculated rows by waiting for any process to return their row index, get the ID of the process, and use that ID and row index to replace the appropriate row in the master’s local copy of the matrix with the worker process’ calculated row. We continue incrementing working_tasks and sending new values for next until all of the row indices of the matrix (0-1023) have been sent to a worker process. When this occurs, we send a null value for next with a special tag number (3) to signal the worker processes to stop.
 
 Once `working_tasks == 0`, we get and print the calculation time, matrix checksum, and call `writeImage()` to draw the PGM image using the result matrix.
 
 #### Worker Code
 
-Each worker process begins by allocating a new int array `plane[]` to store the values calculated for its assigned matrix row. Next, the process’ local values for input parameters `x_center, y_center, dist, cutoff` are updated once the values are received from the master using MPI_Recv(). After this, each process executes a while loop that exits if a MPI_Recv() call to update next receives a message with an `MPI_TAG` unequal to `1` or if the message generates an error. This should occur once the master finds that row_sent matches the number of rows in the matrix. Within the while loop, we call `iteratePoint()` on each index of the row to calculate the number of iterations that the Mandelbrot equation is run for the point’s associated complex value. Once values for the row have been assigned, the row index and row values are sent back to the master process with a return MPI_TAG value of `2`.
+Each worker process begins by allocating a new int array `plane[]` to store the values calculated for its assigned matrix row. Next, the process’ local values for input parameters `x_center, y_center, dist, cutoff` are updated once the values are received from the master using `MPI_Recv`(). After this, each process executes a while loop that exits if a `MPI_Recv()` call to update next receives a message with an `MPI_TAG` unequal to `1` or if the message generates an error. This should occur once the master finds that row_sent matches the number of rows in the matrix. Within the while loop, we call `iteratePoint()` on each index of the row to calculate the number of iterations that the Mandelbrot equation is run for the point’s associated complex value. Once values for the row have been assigned, the row index and row values are sent back to the master process with a return `MPI_TAG` value of `2`.
 
 
 #### Timing Measurement
@@ -71,6 +71,32 @@ Each worker process begins by allocating a new int array `plane[]` to store the 
 | 32               | 0.245656        | 0.236120        | 0.240654        | 0.240810        |
 | 64               | 0.295983        | 0.250135        | 0.294961        | 0.280360        |
 
+`mpirun -n N ./mandelbrot_mpi 6.2 -8.2 60 1024`
+
+| Number of tasks  | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
+| ---------------- |:---------------:|:---------------:|:---------------:|:---------------:| 
+| 2 (serial)       | 0.018452        | 0.020100        | 0.018875        | 0.019142        |
+| 4                | 0.006074        | 0.006316        | 0.009058        | 0.007149        |
+| 8                | 0.005207        | 0.005063        | 0.005700        | 0.005535        |
+| 16               | 0.018838        | 0.004640        | 0.012496        | 0.011991        |
+| 32               | 0.033546        | 0.006326        | 0.009128        | 0.016333        |
+| 64               | 0.033230        | 0.033230        | 0.050523        | 0.038994        |
+
+Based on the run times calculated for different task numbers and cutoff parameters,
+we can make a few observations. First, we see that for both tests, as number of
+available tasks increase, mean runtimes decrease until a certain point (n = 16).
+This behavior is what we would expect of the program, since more tasks being available
+would correspond to more processes calculating the result matrix at the same time.
+Run times for higher task numbers may be slightly more elongated due to increased
+complexity in overhead when managing all of the available processes.
+By testing the effects that each individual input parameter has on the final runtime,
+we saw no significant changes in run time when zoom or cutoff values were changed.
+We saw the greatest difference in run time when changing the `x_center` and `y_center`
+parameters to be closer or nearer to the center value of (0, 0). The nearer to the center
+of the image the image is created, the longer the compilation takes. This makes sense, as
+most values that have membership within the Mandelbrot set can be found near the center
+point of (0,0), resulting in longer calculation times since there would be more iterations
+of the Mandelbrot equation in `iteratePoint()`.
 
 ### How we tested the project
 We ran the test scripts provided to see if our output matches the expected output.
