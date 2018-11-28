@@ -31,64 +31,74 @@ A worker is responsible for the actual computation of matrix multiplication. Fir
 MPI is terminated by `MPI_Finalize();`. 
 
 #### Timing measurement
-Matrices of small order: 
-`mpirun -n N ./mmm_mpi 500`
+###### Matrices of small order: 
+_`mpirun -n N ./mmm_mpi 500`_
 
 | N                | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
 | ---------------- |:---------------:|:---------------:|:---------------:|:---------------:| 
 | 2 (serial)       | 0.065661        | 0.066007        | 0.076338        | 0.069335        |
 | 4                | 0.037143        | 0.036668        | 0.025774        | 0.033195        |
-| 8                | 0.032724        | 0.034662        | 0.032600        | 0.033329        |
+| **8**            | **0.032724**    | **0.034662**    | **0.032600**    | **0.033329**    |
 | 16               | 0.066835        | 0.050057        | 0.051531        | 0.056141        |
 | 32               | 0.117624        | 0.109797        | 0.118193        | 0.115205        |
 | 64               | 0.436475        | 0.405924        | 0.382945        | 0.408448        |
 
-best N = 8
 
-`mpirun --hostfile csif_hostfile -np N mmm_mpi 500`
+_`mpirun --hostfile csif_hostfile -np N mmm_mpi 500`_
 
 | N                | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
 | ---------------- |:---------------:|:---------------:|:---------------:|:---------------:|
 | 2                | 0.108223        | 0.104075        | 0.103919        | 0.105406        |
-| 3                | 0.036386        | 0.037831        | 0.037508        | 0.037241        |
-| 4                | 0.039219        | 0.039254        | 0.039255        | 0.039243        |
+| **3**            | **0.036386**    | **0.037831**    | **0.037508**    | **0.037242**    |
+| 4                | 0.039219        | 0.039254        | 0.039255        | 0.039242        |
 | 8                | 0.886669        | 0.884652        | 0.882320        | 0.884547        |
 | 16               | 2.389745        | 2.401332        | 2.366564        | 2.385880        |
 | 32               | 5.110934        | 5.080035        | 5.080933        | 5.090634        |
 
-best N = 3
+**_local computer vs. multiple computers_**
+Using `mpirun` with different configurations, we can run the program on a local system or multiple computers. Apparently, multiple computers allow higher scalability in terms of the number of nodes. However, for the same number of nodes, local system outperforms MPI that's done over a network. It makes sense because in a system of multiple computers, there're more overheads passing messages between different computers. We observed from the above table that, in a local system with 8 processors, the multiplication of matrices with smaller order (500) finishes fastest when the size of `MPI_COMM_WORLD` equals  8, which is the number of processors. It fits our expectation because all the processors are all working and the communication overhead is offset by acceleration in calculation brought by parallelism of MPI. However, the "golden" number is not the same for a network of computers. We've found size of `MPI_COMM_WORLD` = 3 performs best in a network of csif computers, which tells us that the overhead of communicating between computers is rather significant compared to the complexity of matrix multiplication.
 
-Matrices of large order: 
-`mpirun -n N ./mmm_mpi 3200`
+###### Matrices of large order: 
+_`mpirun -n N ./mmm_mpi 3200`_
 
 | N                | Running time    | 
 | ---------------- |:---------------:|
 | 3                | 13.026697       |
-| 4                | 11.896477       |
+| **4**            | **11.896477**   |
 | 8                | 12.307595       | 
 | 16               | 12.654407       | 
 | 32               | 13.164836       | 
 | 64               | 18.937689       | 
 
-`mpirun -n N ./mmm_mpi 6400`
+_`mpirun -n N ./mmm_mpi 6400`_
 
 | N                | Running time    | 
 | ---------------- |:---------------:|
-| 3                | 13.026697       |
-| 4                | 11.896477       |
-| 8                | 12.307595       | 
-| 16               | 12.654407       | 
-| 32               | 13.164836       | 
-| 64               | 18.937689       | 
+| 3                | 108.590869      |
+| **4**            | **95.986116**   |
+| 5                | 100.684570      |
+| 8                | 98.415499       | 
 
-best N = 4
 
-`mpirun --hostfile csif_hostfile -np N mmm_mpi 3200`
+_`mpirun --hostfile csif_hostfile -np N mmm_mpi 3200`_
 
 | N                | Running time    | 
 | ---------------- |:---------------:|
+| **3**            | **12.522665**   |
 | 4                | 12.711193       |
 | 8                | 74.468550       | 
+
+
+_`mpirun --hostfile csif_hostfile -np N mmm_mpi 6400`_
+
+| N                | Running time    | 
+| ---------------- |:---------------:|
+| 3                | 101.312151      |
+| **4**            | **94.201582**   |
+| 8                | 156.467655      | 
+
+**_small order vs. large order_**
+
 
 
 ### Program #2: Mandelbrot Set
