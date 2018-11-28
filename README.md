@@ -31,9 +31,10 @@ A worker is responsible for the actual computation of matrix multiplication. Fir
 MPI is terminated by `MPI_Finalize();`. 
 
 #### Timing measurement
-`mpirun -n N ./mandelbrot_mpi -1 -0.2 9 256`
+Matrices of small order: 
+`mpirun -n N ./mmm_mpi 500`
 
-| Number of tasks  | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
+| N                | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
 | ---------------- |:---------------:|:---------------:|:---------------:|:---------------:| 
 | 2 (serial)       | 0.065661        | 0.066007        | 0.076338        | 0.069335        |
 | 4                | 0.037143        | 0.036668        | 0.025774        | 0.033195        |
@@ -41,6 +42,50 @@ MPI is terminated by `MPI_Finalize();`.
 | 16               | 0.066835        | 0.050057        | 0.051531        | 0.056141        |
 | 32               | 0.117624        | 0.109797        | 0.118193        | 0.115205        |
 | 64               | 0.436475        | 0.405924        | 0.382945        | 0.408448        |
+
+best N = 8
+
+`mpirun --hostfile csif_hostfile -np N mmm_mpi 500`
+| N                | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
+| ---------------- |:---------------:|:---------------:|:---------------:|:---------------:|
+| 2                | 0.108223        | 0.104075        | 0.103919        |                 |
+| 3                | 0.036386        | 0.037831        | 0.037508        |                 |
+| 4                | 0.039219        | 0.039254        | 0.039255        |                 |
+| 8                | 0.886669        | 0.884652        | 0.882320        | 0.884547        |
+| 16               | 2.389745        | 2.401332        | 2.366564        | 2.385880        |
+| 32               | 5.110934        | 5.080035        | 5.080933        | 5.090634        |
+
+best N = 3
+
+Matrices of large order: 
+`mpirun -n N ./mmm_mpi 3200`
+| N                | Running time    | 
+| ---------------- |:---------------:|
+| 3                | 13.026697       |
+| 4                | 11.896477       |
+| 8                | 12.307595       | 
+| 16               | 12.654407       | 
+| 32               | 13.164836       | 
+| 64               | 18.937689       | 
+
+`mpirun -n N ./mmm_mpi 6400`
+| N                | Running time    | 
+| ---------------- |:---------------:|
+| 3                | 13.026697       |
+| 4                | 11.896477       |
+| 8                | 12.307595       | 
+| 16               | 12.654407       | 
+| 32               | 13.164836       | 
+| 64               | 18.937689       | 
+
+best N = 4
+
+`mpirun --hostfile csif_hostfile -np N mmm_mpi 3200`
+| N                | Running time    | 
+| ---------------- |:---------------:|
+| 4                | 12.711193       |
+| 8                | 74.468550       | 
+
 
 ### Program #2: Mandelbrot Set
 For this program, we utilize MPI to dynamically allocate tasks when generating an image of the Mandelbrot set. Because the image is represented in PGM as a large 2D array of values (ie the number of iterations of the equation used to determine set membership), we decided to parallelize and optimize the computation process by having each worker process in the MPI network calculate a row of values independently. The worker process’ calculated row would then be returned to the master process to compile and present the entire matrix.
