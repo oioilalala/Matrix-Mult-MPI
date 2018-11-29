@@ -72,6 +72,8 @@ Using `mpirun` with different configurations, we can run the program on a local 
 ##### _small matrices vs. large matrices_
 We've noticed that for matrices with large orders (e.g. 2000, 3000, 5000...etc. ), 8 is no longer the best number of processes. The difference in performance becomes more significant as the order gets larger. 
 
+![alt text](https://github.com/oioilalala/ECS158-P3/blob/master/mmm.png)
+
 ### Program #2: Mandelbrot Set
 For this program, we utilize MPI to dynamically allocate tasks when generating an image of the Mandelbrot set. Because the image is represented in PGM as a large 2D array of values (ie the number of iterations of the equation used to determine set membership), we decided to parallelize and optimize the computation process by having each worker process in the MPI network calculate a row of values independently. The worker process’ calculated row would then be returned to the master process to compile and present the entire matrix.
 
