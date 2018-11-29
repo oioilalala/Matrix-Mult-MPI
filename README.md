@@ -55,51 +55,8 @@ _`mpirun --hostfile csif_hostfile -np N mmm_mpi 500`_
 | 16               | 2.389745        | 2.401332        | 2.366564        | 2.385880        |
 | 32               | 5.110934        | 5.080035        | 5.080933        | 5.090634        |
 
-1. **_local computer vs. multiple computers_**
-Using `mpirun` with different configurations, we can run the program on a local system or multiple computers. Apparently, multiple computers allow higher scalability in terms of the number of nodes. However, for the same number of nodes, local system outperforms MPI that's done over a network. It makes sense because in a system of multiple computers, there're more overheads passing messages between different computers. We observed from the above table that, in a local system with 8 processors, the multiplication of matrices with smaller order (500) finishes fastest when the size of `MPI_COMM_WORLD` equals  8, which is the number of processors. It fits our expectation because all the processors are all working and the communication overhead is offset by acceleration in calculation brought by parallelism of MPI. However, the "golden" number is not the same for a network of computers. We've found size of `MPI_COMM_WORLD` = 3 performs best in a network of csif computers, which tells us that the overhead of communicating between computers is rather significant compared to the complexity of matrix multiplication.
-
-###### Matrices of large order: 
-_`mpirun -n N ./mmm_mpi 3200`_
-
-| N                | Mean Runtime    | 
-| ---------------- |:---------------:|
-| 3                | 13.026697       |
-| **4**            | **11.896477**   |
-| 8                | 12.307595       | 
-| 16               | 12.654407       | 
-| 32               | 13.164836       | 
-| 64               | 18.937689       | 
-
-_`mpirun -n N ./mmm_mpi 6400`_
-
-| N                | Mean Runtime    | 
-| ---------------- |:---------------:|
-| 3                | 108.590869      |
-| **4**            | **95.986116**   |
-| 5                | 100.684570      |
-| 8                | 98.415499       | 
-
-
-_`mpirun --hostfile csif_hostfile -np N mmm_mpi 3200`_
-
-| N                | Mean Runtime    | 
-| ---------------- |:---------------:|
-| **3**            | **12.522665**   |
-| 4                | 12.711193       |
-| 8                | 74.468550       | 
-
-
-_`mpirun --hostfile csif_hostfile -np N mmm_mpi 6400`_
-
-| N                | Running time    | 
-| ---------------- |:---------------:|
-| 3                | 101.312151      |
-| **4**            | **94.201582**   |
-| 8                | 156.467655      | 
-
-2. **_small order vs. large order_**
-We've observed that for matices with larger orders (3200, 6400), number of processors in a local system is no longer optimal. **3** or **4** are found to have shortest running time. 
-
+**_local computer (multi-cores) vs. multiple computers (multi-nodes)_**
+Using `mpirun` with different configurations, we can run the program on a local system or multiple computers. Apparently, multiple computers allow higher scalability in terms of the number of nodes. However, for the same number of processes, local system outperforms MPI that's done over a network. It makes sense because in a system of multiple computers, there're more overheads passing messages between different computers. We observed from the above table that, in a local system with 8 processors, the multiplication of matrices finishes fastest when the size of `MPI_COMM_WORLD` equals  8, which is the number of processors. It fits our expectation because all the processors are all working and the communication overhead is offset by acceleration in calculation brought by parallelism of MPI. However, the "golden" number is not the same for a network of computers. We've found size of `MPI_COMM_WORLD` = 3 performs best in a network of csif computers, which tells us that the overhead of communicating between computers is rather significant compared to the complexity of matrix multiplication. Since these processes are loosely coupled in a network of computers, bandwidth is lower and latency becomes higher. This explains why the `--hostfile` option returns much slower than a local system. 
 
 ### Program #2: Mandelbrot Set
 For this program, we utilize MPI to dynamically allocate tasks when generating an image of the Mandelbrot set. Because the image is represented in PGM as a large 2D array of values (ie the number of iterations of the equation used to determine set membership), we decided to parallelize and optimize the computation process by having each worker process in the MPI network calculate a row of values independently. The worker process’ calculated row would then be returned to the master process to compile and present the entire matrix.
