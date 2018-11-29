@@ -48,11 +48,11 @@ _`mpirun -n N ./mmm_mpi 2000`_
 
 | N                | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
 | ---------------- |:---------------:|:---------------:|:---------------:|:---------------:| 
-| 2 (serial)       | 5.407144        | 5.438125        | 5.380642        | 0.069335        |
-| 4                | 2.920352        | 2.918215        | 2.921997        | 0.035319        |
-| **8**            | **3.018931**    | **3.011139**    | **3.003037**    | **0.033329**    |
-| 16               | 3.107592        | 3.128444        | 3.125412        | 0.056141        |
-| 32               | 3.473519        | 3.550525        | 3.452923        | 0.115205        |
+| 2 (serial)       | 5.407144        | 5.438125        | 5.380642        | 5.408637        |
+| **4**            | **2.920352**    | **2.918215**    | **2.921997**    | **2.920188**    |
+| 8                | 3.018931        | 3.011139        | 3.003037        | 3.011036        |
+| 16               | 3.107592        | 3.128444        | 3.125412        | 3.120484        |
+| 32               | 3.473519        | 3.550525        | 3.452923        | 3.492322        |
 
 
 _`mpirun --hostfile csif_hostfile -np N mmm_mpi 500`_
@@ -67,7 +67,10 @@ _`mpirun --hostfile csif_hostfile -np N mmm_mpi 500`_
 | 32               | 5.110934        | 5.080035        | 5.080933        | 5.090634        |
 
 ##### _local computer (multi-cores) vs. multiple computers (multi-nodes)_
-Using `mpirun` with different configurations, we can run the program on a local system or multiple computers. Apparently, multiple computers allow higher scalability in terms of the number of nodes. However, for the same number of processes, local system outperforms MPI that's done over a network. It makes sense because in a system of multiple computers, there're more overheads passing messages between different computers. We observed from the above table that, in a local system with 8 processors, the multiplication of matrices finishes fastest when the size of `MPI_COMM_WORLD` equals  8, which is the number of processors. It fits our expectation because all the processors are all working and the communication overhead is offset by acceleration in calculation brought by parallelism of MPI. However, the "golden" number is not the same for a network of computers. We've found size of `MPI_COMM_WORLD` = 3 performs best in a network of csif computers, which tells us that the overhead of communicating between computers is rather significant compared to the complexity of matrix multiplication. Since these processes are loosely coupled in a network of computers, bandwidth is lower and latency becomes higher. This explains why the `--hostfile` option returns much slower than a local system. 
+Using `mpirun` with different configurations, we can run the program on a local system or multiple computers. Apparently, multiple computers allow higher scalability in terms of the number of nodes. However, for the same number of processes, local system outperforms MPI that's done over a network. It makes sense because in a system of multiple computers, there're more overheads passing messages between different computers. We observed from the above table that, in a local system with 8 processors, the multiplication of matrices finishes fastest when the size of `MPI_COMM_WORLD` equals  8, which is the number of processors. It fits our expectation because all the processors are all working and the communication overhead is offset by acceleration in calculation brought by parallelism of MPI. However, the "golden" number is not the same for a network of computers. We've found size of `MPI_COMM_WORLD` = 3 or 4 performs best in a network of csif computers, which tells us that the overhead of communicating between computers is rather significant compared to the complexity of matrix multiplication. Since these processes are loosely coupled in a network of computers, bandwidth is lower and latency becomes higher. This explains why the `--hostfile` option returns much slower than a local system. 
+
+##### _small matrices vs. large matrices_
+We've noticed that for matrices with large orders (e.g. 2000, 3000, 5000...etc. ), 8 is no longer the best number of processes.  
 
 ### Program #2: Mandelbrot Set
 For this program, we utilize MPI to dynamically allocate tasks when generating an image of the Mandelbrot set. Because the image is represented in PGM as a large 2D array of values (ie the number of iterations of the equation used to determine set membership), we decided to parallelize and optimize the computation process by having each worker process in the MPI network calculate a row of values independently. The worker process’ calculated row would then be returned to the master process to compile and present the entire matrix.
@@ -114,14 +117,14 @@ Each worker process begins by allocating a new int array `plane[]` to store the 
 
 | N                | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
 | ---------------- |:---------------:|:---------------:|:---------------:|:---------------:| 
-| 2                | 1.581024        | 1.757338        | 1.672732        |                 |
-| 3                | 0.763472        | 0.793965        | 0.769273        |                 |
-| 4                | 0.625642        | 0.628855        | 0.634396        | 0.005535        |
-| 5                | 0.302146        | 0.284726        | 0.292505        | 0.011991        |
-| 6                | 0.300831        | 0.290144        | 0.283503        | 0.016333        |
-| 7                | 0.346066        | 0.304367        | 0.343276        | 0.038994        |
-| 8                | 0.285252        | 0.294370        | 0.281040        |                 |
-| 16               | 0.326629        | 0.321474        | 0.330356        |                 |
+| 2                | 1.581024        | 1.757338        | 1.672732        | 1.670365        |
+| 3                | 0.763472        | 0.793965        | 0.769273        | 0.775570        |
+| 4                | 0.625642        | 0.628855        | 0.634396        | 0.629631        |
+| 5                | 0.302146        | 0.284726        | 0.292505        | 0.293126        |
+| 6                | 0.300831        | 0.290144        | 0.283503        | 0.291493        |
+| 7                | 0.346066        | 0.304367        | 0.343276        | 0.331236        |
+| 8                | 0.285252        | 0.294370        | 0.281040        | 0.276887        |
+| 16               | 0.326629        | 0.321474        | 0.330356        | 0.326153        |
 
 
 Based on the run times calculated for different task numbers and cutoff parameters,
