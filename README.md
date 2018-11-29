@@ -31,7 +31,7 @@ A worker is responsible for the actual computation of matrix multiplication. Fir
 MPI is terminated by `MPI_Finalize();`. 
 
 #### Timing measurement
-###### Matrices of small order: 
+
 _`mpirun -n N ./mmm_mpi 500`_
 
 | N                | Running time #1 | Running time #2 | Running time #3 | Mean runtime    |
@@ -55,7 +55,7 @@ _`mpirun --hostfile csif_hostfile -np N mmm_mpi 500`_
 | 16               | 2.389745        | 2.401332        | 2.366564        | 2.385880        |
 | 32               | 5.110934        | 5.080035        | 5.080933        | 5.090634        |
 
-**_local computer (multi-cores) vs. multiple computers (multi-nodes)_**
+##### _local computer (multi-cores) vs. multiple computers (multi-nodes)_
 Using `mpirun` with different configurations, we can run the program on a local system or multiple computers. Apparently, multiple computers allow higher scalability in terms of the number of nodes. However, for the same number of processes, local system outperforms MPI that's done over a network. It makes sense because in a system of multiple computers, there're more overheads passing messages between different computers. We observed from the above table that, in a local system with 8 processors, the multiplication of matrices finishes fastest when the size of `MPI_COMM_WORLD` equals  8, which is the number of processors. It fits our expectation because all the processors are all working and the communication overhead is offset by acceleration in calculation brought by parallelism of MPI. However, the "golden" number is not the same for a network of computers. We've found size of `MPI_COMM_WORLD` = 3 performs best in a network of csif computers, which tells us that the overhead of communicating between computers is rather significant compared to the complexity of matrix multiplication. Since these processes are loosely coupled in a network of computers, bandwidth is lower and latency becomes higher. This explains why the `--hostfile` option returns much slower than a local system. 
 
 ### Program #2: Mandelbrot Set
